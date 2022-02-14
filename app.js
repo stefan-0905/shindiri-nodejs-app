@@ -45,9 +45,9 @@ app.use((err, req, res, next) => {
 /**
  * Cron Jobs Schedules
  */
-// IndegoAPITask();
+// DataFetchingTask();
 try {
-  Scheduler.run('* 0 * * * *', DataFetchingTask)
+  Scheduler.run('0 0 * * * *', DataFetchingTask)
 } catch(error) {
   console.log(error)
   process.exit(1);
