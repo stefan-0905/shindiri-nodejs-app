@@ -8,37 +8,40 @@ const StationRepository = Object.freeze({
    */
   findAllAfterDate: (date) => {
     return new Promise((resolve, reject) => {
-      STATION.aggregate([
-        {
-          $match: {
-            created_at: { $gte: date },
+      STATION.aggregate(
+        [
+          {
+            $match: {
+              created_at: { $gte: date },
+            },
           },
-        },
-        {
-          $lookup: {
-            from: "weathers",
-            localField: 'created_at',
-            foreignField: 'created_at',
-            as: 'weather',
-          }
-        },
-        {
-          $group: {
-            _id: '$Feature',
-            at: { $first: '$created_at' },
-            stations: { $push: '$$ROOT' },
-            weather: { $addToSet: '$weather' },
+          {
+            $lookup: {
+              from: 'weathers',
+              localField: 'created_at',
+              foreignField: 'created_at',
+              as: 'weather',
+            },
           },
-        },
-        {
-          $project: {
-            _id: 0,
-            at: 1,
-            stations: 1,
-            weather: 1,
+          {
+            $group: {
+              _id: '$Feature',
+              at: { $first: '$created_at' },
+              stations: { $push: '$$ROOT' },
+              weather: { $addToSet: '$weather' },
+            },
           },
-        },
-      ])
+          {
+            $project: {
+              _id: 0,
+              at: 1,
+              stations: 1,
+              weather: 1,
+            },
+          },
+        ],
+        { allowDiskUse: true }
+      )
         .then((result) => {
           resolve(result);
         })
@@ -72,11 +75,11 @@ const StationRepository = Object.freeze({
         },
         {
           $lookup: {
-            from: "weathers",
+            from: 'weathers',
             localField: 'created_at',
             foreignField: 'created_at',
             as: 'weather',
-          }
+          },
         },
         {
           $project: {
@@ -92,7 +95,7 @@ const StationRepository = Object.freeze({
         aggregateAlgo[1]['$match']['created_at'] = { $gte: at };
       }
 
-      STATION.aggregate(aggregateAlgo)
+      STATION.aggregate(aggregateAlgo, { allowDiskUse: true })
         .then((result) => {
           resolve(result[0]);
         })
@@ -125,23 +128,23 @@ const StationRepository = Object.freeze({
         },
         {
           $lookup: {
-            from: "weathers",
+            from: 'weathers',
             localField: 'created_at',
             foreignField: 'created_at',
             as: 'weather',
-          }
+          },
         },
         {
           $project: {
             _id: 0,
             at: '$created_at',
             station: '$$ROOT',
-            weather: { $first: '$$ROOT.weather'}
+            weather: { $first: '$$ROOT.weather' },
           },
         },
       ];
 
-      STATION.aggregate(aggregateAlgo)
+      STATION.aggregate(aggregateAlgo, { allowDiskUse: true })
         .then((result) => {
           resolve(result);
         })
