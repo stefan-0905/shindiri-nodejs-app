@@ -1,7 +1,7 @@
 const express = require('express');
 const createError = require('http-errors');
 const Scheduler = require('./lib/Scheduler');
-const IndegoAPITask = require('./lib/IndegoAPITask');
+const DataFetchingTask = require('./lib/DataFetchingTask');
 const cors = require('cors');
 
 require('dotenv').config();
@@ -47,10 +47,10 @@ app.use((err, req, res, next) => {
  */
 // IndegoAPITask();
 try {
-  Scheduler.run('* * 1 * * *', IndegoAPITask)
+  Scheduler.run('* 0 * * * *', DataFetchingTask)
 } catch(error) {
   console.log(error)
-  process.exit(1)
+  process.exit(1);
 }
 
 

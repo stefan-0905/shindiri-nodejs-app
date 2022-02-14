@@ -1,3 +1,4 @@
+const { filterForOnlyDaily } = require('../lib/Helpers');
 const StationRepository = require('../repositories/StationRepository');
 
 const StationController = Object.freeze({
@@ -10,8 +11,8 @@ const StationController = Object.freeze({
     return new Promise((resolve, reject) => {
       const date = new Date(req.query.at);
 
-      if(isNaN(date)) {
-        reject(new Error("Not valid date"))
+      if (isNaN(date)) {
+        reject(new Error('Not valid date'));
       }
 
       StationRepository.findAllAfterDate(date)
@@ -37,24 +38,30 @@ const StationController = Object.freeze({
 
       if (req.query.at) {
         const from = new Date(req.query.at);
-        if(isNaN(from)) {
-          reject(new Error("Not valid date"))
+        if (isNaN(from)) {
+          reject(new Error('Not valid date'));
         }
 
         promise = StationRepository.findOneAtDate(id, from);
       }
       if (req.query.from && req.query.to) {
-        const from = new Date(req.query.from)
-        const to = new Date(req.query.to)
-        
-        if(isNaN(from) || isNaN(to)) {
-          reject(new Error("Not valid date"))
+        const from = new Date(req.query.from);
+        const to = new Date(req.query.to);
+
+        if (isNaN(from) || isNaN(to)) {
+          reject(new Error('Not valid date'));
         }
 
-        promise = StationRepository.findAllInRange(id, from, to);
+        promise = StationRepository.findAllInRange(id, from, to).then((data) => {
+          if (req.query.frequency !== undefined && req.query.frequency === 'daily') {
+            return filterForOnlyDaily(data);
+          }
+
+          return data;
+        });
       }
 
-      if(promise === undefined) {
+      if (promise === undefined) {
         resolve(undefined);
         return;
       }
