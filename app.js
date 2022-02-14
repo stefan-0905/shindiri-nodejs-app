@@ -47,7 +47,7 @@ app.use((err, req, res, next) => {
  */
 // IndegoAPITask();
 try {
-  // Scheduler.run('* * 1 * * *', IndegoAPITask)
+  Scheduler.run('* * 1 * * *', IndegoAPITask)
 } catch(error) {
   console.log(error)
   process.exit(1)
