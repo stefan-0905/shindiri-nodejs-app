@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  nodejs:
+    build: 
+      context: ./
+    container_name: nodejs
+    hostname: nodejs
+    ports:
+      - "3000:3000"
+    networks:
+      - shindiri
+    depends_on:
+      - mongo
+  mongo:
+    container_name: mongo
+    image: mongo
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - shindiri
+  nginx:
+    build:
+      context: ./docker/nginx
+    container_name: nginx
+    hostname: nginx
+    ports:
+      - "80:80"
+    networks:
+      - shindiri
+    depends_on:
+      - nodejs
+networks:
+  shindiri:
+    external: true
+
