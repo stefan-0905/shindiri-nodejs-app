@@ -1,8 +1,8 @@
 const express = require('express');
 const createError = require('http-errors');
-const Scheduler = require('./lib/Scheduler');
-const DataFetchingTask = require('./lib/DataFetchingTask');
+const dataFetchingTask = require('./lib/DataFetchingTask');
 const cors = require('cors');
+const cron = require('node-cron')
 
 require('dotenv').config();
 const connectDB = require('./lib/MongoDB');
@@ -45,9 +45,8 @@ app.use((err, req, res, next) => {
 /**
  * Cron Jobs Schedules
  */
-// DataFetchingTask();
 try {
-  Scheduler.run('0 0 * * * *', DataFetchingTask)
+  cron.schedule('0 0 * * * *', dataFetchingTask)
 } catch(error) {
   console.log(error)
   process.exit(1);
