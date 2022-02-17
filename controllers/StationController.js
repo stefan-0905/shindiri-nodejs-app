@@ -1,80 +1,80 @@
 const { filterForOnlyDaily } = require('../lib/Helpers');
 const StationRepository = require('../repositories/StationRepository');
 
-const StationController = Object.freeze({
-  /**
-   *
-   * @param { import('express').Request } res
-   * @returns { Promise<[]> } data from db
-   */
-  find: (req) => {
-    return new Promise((resolve, reject) => {
-      const date = new Date(req.query.at);
+/**
+ *
+ * @param { import('express').Request } res
+ * @returns { Promise<[]> } data from db
+ */
+const find = async (req) => {
+  const date = new Date(req.query.at);
 
-      if (isNaN(date)) {
+  try {
+    if (isNaN(date)) {
+      reject(new Error('Not valid date'));
+    }
+
+    const data = await StationRepository.findAllAfterDate(date);
+
+    if (data.length === 0 || data[0].stations === undefined) {
+      const error = new Error('NOT FOUND');
+      error.status = 404;
+      throw error;
+    }
+
+    return data[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ *
+ * @param { import('express').Request } res
+ * @returns { Promise<[]> } data from db
+ */
+const findOne = async (req) => {
+  const id = Number(req.params.id);
+  let data;
+
+  try {
+    // Handling at query param
+    if (req.query.at) {
+      const from = new Date(req.query.at);
+      if (isNaN(from)) {
         reject(new Error('Not valid date'));
       }
 
-      StationRepository.findAllAfterDate(date)
-        .then((data) => {
-          resolve({ ...data[0] });
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
-  },
+      data = await StationRepository.findOneAtDate(id, from);
+    }
+    // Handling from and to query param
+    if (req.query.from && req.query.to) {
+      const from = new Date(req.query.from);
+      const to = new Date(req.query.to);
 
-  /**
-   *
-   * @param { import('express').Request } res
-   * @returns { Promise<[]> } data from db
-   */
-  findOne: (req) => {
-    return new Promise((resolve, reject) => {
-      const id = Number(req.params.id);
-
-      let promise;
-
-      if (req.query.at) {
-        const from = new Date(req.query.at);
-        if (isNaN(from)) {
-          reject(new Error('Not valid date'));
-        }
-
-        promise = StationRepository.findOneAtDate(id, from);
-      }
-      if (req.query.from && req.query.to) {
-        const from = new Date(req.query.from);
-        const to = new Date(req.query.to);
-
-        if (isNaN(from) || isNaN(to)) {
-          reject(new Error('Not valid date'));
-        }
-
-        promise = StationRepository.findAllInRange(id, from, to).then((data) => {
-          if (req.query.frequency !== undefined && req.query.frequency === 'daily') {
-            return filterForOnlyDaily(data);
-          }
-
-          return data;
-        });
+      if (isNaN(from) || isNaN(to)) {
+        reject(new Error('Not valid date'));
       }
 
-      if (promise === undefined) {
-        resolve(undefined);
-        return;
+      data = await StationRepository.findAllInRange(id, from, to);
+      if (req.query.frequency && req.query.frequency === 'daily') {
+        data = filterForOnlyDaily(data);
       }
+    }
 
-      promise
-        .then((result) => {
-          resolve(result);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
-  },
-});
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      const error = new Error('NOT FOUND');
+      error.status = 404;
+      throw error;
+    }
 
-module.exports = StationController;
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+module.exports = {
+  find,
+  findOne,
+};
